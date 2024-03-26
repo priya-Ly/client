@@ -3,16 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.2.1",
+    "@ckeditor/ckeditor5-cloud-services": "^41.2.1",
+    "@ckeditor/ckeditor5-react": "^6.2.0",
+    "@editorjs/editorjs": "^2.29.0",
+    "@editorjs/embed": "^2.7.0",
+    "@editorjs/header": "^2.8.1",
+    "@editorjs/image": "^2.9.0",
+    "@editorjs/list": "^1.9.0",
+    "@editorjs/simple-image": "^1.6.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.8",
+    "draft-js": "^0.11.7",
+    "jodit": "^4.0.18",
+    "jodit-react": "^4.0.15",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-draft-wysiwyg": "^1.15.0",
+    "react-quill": "^2.0.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "set PORT=5000 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -34,5 +49,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "html-webpack-plugin": "^5.6.0",
+    "source-map-loader": "^5.0.0",
+    "webpack": "^5.91.0"
   }
 }
