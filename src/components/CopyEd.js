@@ -1,13 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import ImageTool from "@editorjs/image";
 import List from "@editorjs/list";
 import Embed from "@editorjs/embed";
-import axios from "axios";
-import EditorJS from "@editorjs/editorjs";
 
-function EditorAdd() {
-  const ejInstance = useRef(null);
+import axios from "axios";
+
+const DEFAULT_INITIAL_DATA = {
+  time: new Date().getTime(),
+  blocks: [
+    {
+      type: "header",
+      data: {
+        level: 1,
+        text: "My name is Lakhan",
+      },
+    },
+  ],
+};
+
+const CopyEd = () => {
+  const ejInstance = useRef();
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState("");
   const [image, setImage] = useState(null); // Changed initial value to null
@@ -17,8 +31,6 @@ function EditorAdd() {
   const [selectedAuthor, setSelectedAuthor] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [content, setContent] = useState("");
-  const [editorInitialized, setEditorInitialized] = useState(false); // State to track editor initialization
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,100 +60,103 @@ function EditorAdd() {
 
     fetchData();
   }, []);
+  const initEditor = () => {
+    const editor = new EditorJS({
+      holder: "editorjs",
+      onReady: () => {
+        ejInstance.current = editor;
+      },
+      autofocus: true,
+      onChange: async () => {
+        try {
+          let content = await editor.saver.save();
+
+          console.log(content);
+          setContent(content);
+        } catch (error) {
+          console.error("Error saving data:", error);
+        }
+      },
+      tools: {
+        header: {
+          class: Header,
+          inlineToolbar: ["link"],
+        },
+        list: {
+          class: List,
+          inlineToolbar: ["link", "bold"],
+        },
+        embed: {
+          class: Embed,
+          inlineToolbar: false,
+          config: {
+            services: {
+              youtube: true,
+              coub: true,
+            },
+          },
+        },
+        image: {
+          class: ImageTool,
+          config: {
+            uploader: {
+              async uploadByFile(file) {
+                // your own uploading logic here
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await axios.post(
+                  `http://localhost:7000/blogLy/api/upload`,
+                  formData,
+                  {
+                    headers: {
+                      "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: false,
+                  }
+                );
+
+                if (response.data.success === 1) {
+                  return response.data;
+                }
+              },
+              async uploadByUrl(url) {
+                const response = await axios.post(
+                  `http://localhost:7000/blogLy/uploadUrl`,
+                  {
+                    url,
+                    headers: {
+                      "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: false,
+                  }
+                );
+
+                if (response.data.success === 1) {
+                  console.log(response.data, "urll comee");
+
+                  return response.data;
+                }
+              },
+            },
+            inlineToolbar: true,
+          },
+        },
+      },
+      data: DEFAULT_INITIAL_DATA,
+    });
+  };
+
   useEffect(() => {
-    const initializeEditor = async () => {
-      try {
-        ejInstance.current = await new EditorJS({
-          holder: "editorjs",
-          autofocus: false,
-          onChange: async () => {
-            try {
-              const savedData = await ejInstance.current.save();
-              setContent(savedData);
-            } catch (error) {
-              console.error("Error saving data:", error);
-            }
-          },
-          minHeight: 0,
-          tools: {
-            header: {
-              class: Header,
-              inlineToolbar: ["link"],
-            },
-            list: {
-              class: List,
-              inlineToolbar: ["link", "bold"],
-            },
-            embed: {
-              class: Embed,
-              inlineToolbar: false,
-              config: {
-                services: {
-                  youtube: true,
-                  coub: true,
-                },
-              },
-            },
-            image: {
-              class: ImageTool,
-              config: {
-                uploader: {
-                  async uploadByFile(file) {
-                    const formData = new FormData();
-                    formData.append("file", file);
-
-                    const response = await fetch(
-                      "http://localhost:7000/blogLy/api/upload",
-                      {
-                        method: "POST",
-                        body: formData,
-                        withCredentials: false,
-                      }
-                    );
-                    if (response.ok) {
-                      const resData = await response.json();
-                      if (resData.success === 1) {
-                        return resData;
-                      }
-                    } else {
-                      console.error("Image upload failed:", response.status);
-                    }
-                  },
-                  async uploadByUrl(url) {
-                    const response = await axios.post(
-                      "http://localhost:7000/blogLy/uploadUrl",
-                      { url }
-                    );
-                    if (response.data.success === 1) {
-                      return response.data;
-                    }
-                  },
-                },
-              },
-            },
-          },
-        });
-      } catch (error) {
-        console.error("Error initializing EditorJS:", error);
-      }
-    };
-
-    if (!ejInstance.current) {
-      initializeEditor();
+    if (ejInstance.current === null) {
+      initEditor();
     }
 
     return () => {
-      if (ejInstance.current) {
-        // Check if destroy method exists before calling it
-        if (typeof ejInstance.current.destroy === "function") {
-          ejInstance.current.destroy();
-        } else {
-          console.warn("Destroy method not found on EditorJS instance");
-        }
-      }
+      ejInstance?.current?.destroy();
+      ejInstance.current = null;
     };
   }, []);
-
   const handleInputChange = (e, setState) => {
     setState(e.target.value);
   };
@@ -150,7 +165,7 @@ function EditorAdd() {
     e.preventDefault();
     try {
       const savedData = await ejInstance.current.save();
-
+      console.log(savedData, "sd");
       const formattedContent = {
         blocks: savedData.blocks.map((block) => ({
           type: block.type,
@@ -159,7 +174,7 @@ function EditorAdd() {
         time: savedData.time,
         version: savedData.version,
       };
-
+      console.log(formattedContent, "fc");
       const formData = new FormData();
       formData.append("title", title);
       formData.append("content", JSON.stringify(formattedContent));
@@ -180,7 +195,7 @@ function EditorAdd() {
   };
 
   return (
-    <div style={{ background: "red" }}>
+    <div>
       <form onSubmit={handleSave}>
         <input
           type="text"
@@ -240,6 +255,6 @@ function EditorAdd() {
       </form>
     </div>
   );
-}
+};
 
-export default EditorAdd;
+export default CopyEd;
