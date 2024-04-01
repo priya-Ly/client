@@ -18,7 +18,7 @@ const SingleBlog = () => {
         if (response.ok) {
           const data = await response.json(); // Parse response body as JSON
           console.log(data, "d get");
-          setBlogs(data); // Set the fetched data to state
+          setBlog(data); // Set the fetched data to state
         } else {
           console.log("Failed to fetch blog data");
         }
@@ -33,7 +33,7 @@ const SingleBlog = () => {
   return (
     <div>
       <h1>Blog List</h1>
-      {blogs.map((blog) => (
+      {blog.map((blog) => (
         <div key={blog._id}>
           <h2>{blog.title}</h2>
           <h3>{blog.subtitle}</h3>
