@@ -373,7 +373,7 @@ const CopyEd = () => {
           placeholder="Enter Title"
           required
         />
-        <div id="editorjs" style={{ background: "gray" }}></div>
+        <div id="editorjs"></div>
         <select
           value={selectedAuthor}
           onChange={(e) => handleInputChange(e, setSelectedAuthor)}
