@@ -35,7 +35,81 @@ const GetSingleData = () => {
               {JSON.parse(post.content).blocks.map((block, index) => {
                 switch (block.type) {
                   case "header":
-                    return <h3 key={index}>{block.data.text}</h3>;
+                    return (
+                      <div
+                        key={index}
+                        dangerouslySetInnerHTML={{ __html: block.data.text }}
+                      />
+                    );
+                  case "attaches":
+                    return (
+                      <a key={index} href={block.data.file.url}>
+                        {block.data.title}
+                      </a>
+                    );
+                  case "alert":
+                    return (
+                      <div
+                        key={index}
+                        className={`alert-${block.data.type}`}
+                        dangerouslySetInnerHTML={{
+                          __html: block.data.message,
+                        }}
+                      ></div>
+                    );
+                  case "list":
+                    return (
+                      <ul key={index}>
+                        {block.data.items.map((item, i) => (
+                          <li key={i}>{item.content}</li>
+                        ))}
+                      </ul>
+                    );
+
+                  case "nestedchecklist":
+                    const renderNestedChecklist = (items, level = 0) => (
+                      <ul key={index}>
+                        {items.map((item, i) => (
+                          <li key={i}>
+                            {item.content}
+                            {item.items &&
+                              item.items.length > 0 &&
+                              renderNestedChecklist(item.items, level + 1)}
+                          </li>
+                        ))}
+                      </ul>
+                    );
+
+                    return renderNestedChecklist(block.data.items);
+
+                  case "quote":
+                    return (
+                      <blockquote key={index}>
+                        <p
+                          dangerouslySetInnerHTML={{ __html: block.data.text }}
+                        ></p>
+                        <cite
+                          dangerouslySetInnerHTML={{
+                            __html: block.data.caption,
+                          }}
+                        ></cite>
+                      </blockquote>
+                    );
+                  case "table":
+                    return (
+                      <table key={index}>
+                        <tbody>
+                          {block.data.content.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {row.map((cell, cellIndex) => (
+                                <td key={cellIndex}>{cell}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    );
+
                   case "image":
                     return (
                       <div key={index}>
@@ -46,16 +120,13 @@ const GetSingleData = () => {
                         <p>{block.data.caption}</p>
                       </div>
                     );
-                  case "list":
-                    return (
-                      <ul key={index}>
-                        {block.data.items.map((item, i) => (
-                          <li key={i}>{item}</li>
-                        ))}
-                      </ul>
-                    );
                   case "paragraph":
-                    return <p key={index}>{block.data.text}</p>;
+                    return (
+                      <p
+                        key={index}
+                        dangerouslySetInnerHTML={{ __html: block.data.text }}
+                      />
+                    );
                   default:
                     return null;
                 }
@@ -64,10 +135,10 @@ const GetSingleData = () => {
           )}
           {/* Render other post details */}
           <p>Status: {post.status}</p>
-          {post.image && <img src={post.image} alt="Banner" />}
+          {post.image && <img src={post.image} alt="Data" />}
           <p>Banner Caption: {post.bannerCaption}</p>
           <p>
-            Category:{" "}
+            Category:
             {post.categoryId?.categoryName
               ? post.categoryId.categoryName
               : null}
